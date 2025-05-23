@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultant Quest: Jackhammer Card Clash</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #eef2f3; margin: 0; padding: 20px; }
+    h1 { text-align: center; }
+    #stats { text-align: center; margin-bottom: 10px; }
+    #stats span { font-size: 1.2em; margin: 0 10px; }
+    #game { display: flex; justify-content: space-between; max-width: 900px; margin: auto; }
+    #scenario-area, #card-area { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    #scenario-area { width: 60%; }
+    .scenario-block { background: #888; color: #fff; padding: 10px; margin: 8px 0; border-radius: 4px; cursor: pointer; }
+    #card-area { width: 35%; }
+    .card { background: #4a90e2; color: white; padding: 10px; margin: 8px 0; border-radius: 4px; cursor: grab; text-align: center; }
+    #message { text-align: center; margin-top: 20px; font-weight: bold; min-height: 1.5em; }
+  </style>
+</head>
+<body>
+  <h1>Consultant Quest: Jackhammer Card Clash</h1>
+  <div id="stats"><span id="timer">Time: 120</span><span id="score">Score: 0</span></div>
+  <div id="game">
+    <div id="scenario-area">
+      <h3>Scenarios (drag appropriate AI Move)</h3>
+    </div>
+    <div id="card-area">
+      <h3>AI Moves</h3>
+    </div>
+  </div>
+  <div id="message"></div>
+  <script>
+    const scenarios = [
+      { text: 'Team masks tech debt with more automation duct tape, but issues persist.', key: 'debt', explanation: 'Track and pay down tech debt with a debt-to-value ratio instead of masking it.' },
+      { text: 'Client is layering AI atop brittle legacy workflows—problems accelerate.', key: 'rearch', explanation: 'AI must be the foundation—rethink workflows and re-architect systems.' },
+      { text: 'Vendor still leads with headcount-based models, blocking real transformation.', key: 'services', explanation: 'Shift to Services-as-Software: productized, AI-driven capabilities—not people.' },
+      { text: 'Procurement insists on FTE hourly rates, limiting flexibility and value alignment.', key: 'pricing', explanation: 'Adopt subscription or outcome-based pricing to align incentives and costs.' },
+      { text: 'Data and decisions die in silos—front, middle, back offices lack unified context.', key: 'alignment', explanation: 'Implement OneOffice: dissolve silos for real-time, contextual AI-driven flows.' }
+    ];
+    const moves = [
+      { name: 'Debt-to-Value Ratio', key: 'debt' },
+      { name: 'Re-Architect with AI', key: 'rearch' },
+      { name: 'Services-as-Software', key: 'services' },
+      { name: 'Outcome-Based Pricing', key: 'pricing' },
+      { name: 'OneOffice Alignment', key: 'alignment' }
+    ];
+    let score = 0, timeLeft = 120;
+
+    function initScenarioBlocks() {
+      const area = document.getElementById('scenario-area');
+      scenarios.forEach((s, i) => {
+        const blk = document.createElement('div');
+        blk.className = 'scenario-block';
+        blk.id = `scenario-${i}`;
+        blk.innerText = s.text;
+        blk.dataset.key = s.key;
+        blk.addEventListener('dragover', e => e.preventDefault());
+        blk.addEventListener('drop', dropOnScenario);
+        area.appendChild(blk);
+      });
+    }
+
+    function initCards() {
+      const area = document.getElementById('card-area');
+      moves.forEach((m,i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `card-${i}`;
+        card.innerText = m.name;
+        card.dataset.key = m.key;
+        card.draggable = true;
+        card.addEventListener('dragstart', dragStart);
+        area.appendChild(card);
+      });
+    }
+
+    function dragStart(e) {
+      e.dataTransfer.setData('text/plain', e.target.dataset.key);
+    }
+
+    function dropOnScenario(e) {
+      e.preventDefault();
+      const moveKey = e.dataTransfer.getData('text/plain');
+      const blk = e.currentTarget;
+      const idx = parseInt(blk.id.split('-')[1]);
+      if (moveKey === scenarios[idx].key) {
+        score++; updateScore();
+        showMessage('✅ ' + scenarios[idx].explanation);
+        blk.remove();
+        if (document.querySelectorAll('.scenario-block').length === 0) endGame(true);
+      } else {
+        timeLeft -= 5; updateTimer();
+        showMessage('❌ Not the right move—try again!');
+      }
+    }
+
+    function updateScore() {
+      document.getElementById('score').innerText = `Score: ${score}`;
+    }
+    function updateTimer() {
+      document.getElementById('timer').innerText = `Time: ${timeLeft}`;
+      if (timeLeft <= 0) endGame(false);
+    }
+    function showMessage(msg) {
+      document.getElementById('message').innerText = msg;
+    }
+    function endGame(won) {
+      clearInterval(timerInterval);
+      showMessage(won ? `🎉 All scenarios solved! Final score: ${score}` : `⏰ Time’s up! Score: ${score}`);
+      document.querySelectorAll('.card').forEach(c => c.draggable = false);
+    }
+
+    const timerInterval = setInterval(() => { timeLeft--; updateTimer(); }, 1000);
+
+    initScenarioBlocks();
+    initCards();
+  </script>
+</body>
+</html>
